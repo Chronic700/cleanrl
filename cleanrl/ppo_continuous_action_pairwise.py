@@ -49,8 +49,8 @@ class Args:
     """the entity (team) of wandb's project"""
     capture_video: bool = False
     """whether to capture videos of the agent performances (check out `videos` folder)"""
-    save_model: bool = False
-    """whether to save model into the `runs/{run_name}` folder"""
+    save_model: bool = True
+    """whether to save the trained model and potential"""
     upload_model: bool = False
     """whether to upload the saved model to huggingface"""
     hf_entity: str = ""
@@ -643,5 +643,17 @@ if __name__ == "__main__":
             push_to_hub(args, episodic_returns, repo_id, "PPO", f"runs/{run_name}", f"videos/{run_name}-eval")
 
     envs.close()
+    if args.save_model:
+        model_path = os.path.join(run_dir, "model.pt")
+        torch.save(
+            {
+                "agent_state_dict": agent.state_dict(),
+                "potential_state_dict": potential_net.state_dict(),
+                "args": vars(args),
+            },
+            model_path,
+        )
+        print(f"Saved model to {model_path}")
+
     stats_file.close()
     writer.close()
