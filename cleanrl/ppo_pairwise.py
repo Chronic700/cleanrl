@@ -21,6 +21,7 @@ ROOT_DIR = Path(__file__).resolve().parents[3]
 if str(ROOT_DIR) not in sys.path:
     sys.path.append(str(ROOT_DIR))
 
+from pairwise_advice.cleanrl.envs_minigrid import make_minigrid_env  # noqa: E402
 from pairwise_advice.cleanrl.preference import (  # noqa: E402
     ComparisonBuffer,
     TrajectoryRecord,
@@ -125,11 +126,30 @@ class Args:
 
 def make_env(env_id, idx, capture_video, run_name):
     def thunk():
-        if capture_video and idx == 0:
-            env = gym.make(env_id, render_mode="rgb_array")
-            env = gym.wrappers.RecordVideo(env, f"videos/{run_name}")
+        if env_id == "PairwiseAsciiLargeGap-v0":
+            env = make_minigrid_env(
+                env_id="ascii",
+                grid_name="large_gap",
+                grid_size=11,
+                max_steps=200,
+                render_mode="rgb_array" if capture_video and idx == 0 else None,
+                use_onehot=True,
+            )
+        elif env_id == "MiniGrid-FourRooms-v0":
+            env = make_minigrid_env(
+                env_id="fourrooms",
+                grid_name=None,
+                grid_size=11,
+                max_steps=200,
+                render_mode="rgb_array" if capture_video and idx == 0 else None,
+                use_onehot=True,
+            )
         else:
-            env = gym.make(env_id)
+            if capture_video and idx == 0:
+                env = gym.make(env_id, render_mode="rgb_array")
+                env = gym.wrappers.RecordVideo(env, f"videos/{run_name}")
+            else:
+                env = gym.make(env_id)
         env = gym.wrappers.RecordEpisodeStatistics(env)
         return env
 
